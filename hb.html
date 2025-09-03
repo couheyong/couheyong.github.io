@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多文件A列合并汇总工具</title>
+    <!-- 引入 SheetJS 库用于处理 Excel 文件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f7fa;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #upload-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px dashed #3498db;
+            border-radius: 5px;
+            text-align: center;
+            background-color: #ffffff;
+        }
+        #fileInput {
+            margin: 10px;
+        }
+        #processButton {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #processButton:hover {
+            background-color: #2980b9;
+        }
+        #processButton:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #output {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #ecf0f1;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .duplicate {
+            background-color: #fadbd8; /* 重复项背景色 */
+            font-weight: bold;
+        }
+        #downloadLink {
+            display: block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            width: fit-content; /* 宽度自适应 */
+        }
+        #downloadLink:hover {
+            background-color: #27ae60;
+        }
+        #downloadLink:disabled {
+             background-color: #bdc3c7;
+             cursor: not-allowed;
+             pointer-events: none;
+        }
+        .status {
+             font-style: italic;
+             color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+
+<h1>多文件A列合并汇总工具</h1>
+<p>上传多个 Excel 文件 (.xlsx, .xls)。工具将：</p>
+<ol>
+    <li>提取每个文件 A 列中大于4位的纯数字。</li>
+    <li>将所有提取的数据合并。</li>
+    <li>在 B 列显示数据来源文件名。</li>
+    <li>在 C 列标记重复项。</li>
+    <li><strong>下载时保留长数字原始格式。</strong></li>
+    <li><strong>下载文件名格式：YYYYMMDD_提取数量.xlsx</strong></li>
+</ol>
+
+<div id="upload-container">
+    <input type="file" id="fileInput" accept=".xlsx, .xls" multiple>
+    <button id="processButton" onclick="processFiles()" disabled>处理并合并文件</button>
+</div>
+
+<div id="output"></div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function() {
+        const button = document.getElementById('processButton');
+        if (this.files.length > 0) {
+            button.disabled = false;
+        } else {
+            button.disabled = true;
+        }
+    });
+
+    async function processFiles() {
+        const fileInput = document.getElementById('fileInput');
+        const files = fileInput.files;
+        const outputDiv = document.getElementById('output');
+
+        if (files.length === 0) {
+            alert('请先选择至少一个文件。');
+            return;
+        }
+
+        outputDiv.innerHTML = '<p class="status">正在读取和处理文件...</p>';
+
+        try {
+            // 1. 并行读取所有文件内容
+            const fileDataPromises = Array.from(files).map(file => readFileAsync(file));
+            const fileContents = await Promise.all(fileDataPromises);
+
+            // 2. 提取并处理每个文件的A列数据
+            let allExtractedData = [];
+            for (let i = 0; i < fileContents.length; i++) {
+                const { data, fileName } = fileContents[i];
+                const extracted = extractValidA(data, fileName);
+                allExtractedData = allExtractedData.concat(extracted);
+            }
+
+            // 3. 计算重复项
+            const valueCounts = {};
+            allExtractedData.forEach(item => {
+                const strValue = item.value.toString();
+                valueCounts[strValue] = (valueCounts[strValue] || 0) + 1;
+            });
+
+            // 4. 准备最终表格数据 (A, B, C列)
+            const finalTableData = allExtractedData.map(item => {
+                const strValue = item.value.toString();
+                const isDuplicate = valueCounts[strValue] > 1 ? '重复' : '';
+                return [item.value, item.source, isDuplicate];
+            });
+
+            // 5. 添加表头
+            const tableDataWithHeader = [['A列数值', '来源文件', '是否重复']].concat(finalTableData);
+
+            // 6. 生成HTML表格
+            const htmlTable = generateHtmlTable(tableDataWithHeader);
+
+            // 7. 生成下载链接和文件名 (关键修改在这里)
+            // --- 修改：获取包含 URL 和文件名的对象 ---
+            const { url: downloadUrl, filename } = generateDownloadUrlPreserveNumbers(tableDataWithHeader);
+            // --- 修改结束 ---
+
+            // 8. 显示结果，并动态设置下载链接的文件名
+            outputDiv.innerHTML = `
+                <h2>合并结果</h2>
+                ${htmlTable}
+                <a id="downloadLink" href="${downloadUrl}" download="${filename}">下载合并汇总文件 (${filename})</a>
+            `;
+
+        } catch (error) {
+            console.error('处理文件时发生错误:', error);
+            outputDiv.innerHTML = `<p style="color:red;">处理文件时发生错误: ${error.message}</p>`;
+        }
+    }
+
+    function readFileAsync(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    resolve({ data: jsonData, fileName: file.name });
+                } catch (err) {
+                    reject(new Error(`读取文件 ${file.name} 失败: ${err.message}`));
+                }
+            };
+            reader.onerror = () => reject(new Error(`读取文件 ${file.name} 发生错误`));
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    function extractValidA(dataRows, sourceFileName) {
+        const extracted = [];
+        for (let i = 0; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            if (row && row.length > 0) {
+                const cellValue = row[0]; // A列
+                let isValid = false;
+                let finalValue = cellValue;
+
+                if (typeof cellValue === 'number' && Number.isInteger(cellValue) && Math.abs(cellValue) > 9999) {
+                     isValid = true;
+                } else if (typeof cellValue === 'string' && /^\d+$/.test(cellValue) && cellValue.length > 4) {
+                    const numValue = parseInt(cellValue, 10);
+                    if (!isNaN(numValue)) {
+                         isValid = true;
+                    }
+                }
+                if(isValid) {
+                    extracted.push({ value: finalValue !== undefined ? finalValue : cellValue, source: sourceFileName });
+                }
+            }
+        }
+        return extracted;
+    }
+
+    function generateHtmlTable(data) {
+        if (data.length === 0) return '<p>没有符合条件的数据。</p>';
+
+        let html = '<table id="resultTable">\n';
+        const headerRow = data[0];
+        html += '  <thead>\n    <tr>\n';
+        headerRow.forEach(cell => {
+            html += `      <th>${cell !== null && cell !== undefined ? cell : ''}</th>\n`;
+        });
+        html += '    </tr>\n  </thead>\n';
+
+        html += '  <tbody>\n';
+        for (let i = 1; i < data.length; i++) {
+            const row = data[i];
+
+            const isDuplicateRow = row[2] === '重复';
+            const rowClass = isDuplicateRow ? ' class="duplicate"' : '';
+            html += `    <tr${rowClass}>\n`;
+            row.forEach(cell => {
+                const cellValue = cell !== null && cell !== undefined ? cell : '';
+                html += `      <td>${cellValue}</td>\n`;
+            });
+            html += '    </tr>\n';
+        }
+        html += '  </tbody>\n';
+        html += '</table>\n';
+
+        return html;
+    }
+
+    // --- 关键修改：生成保留长数字格式的下载链接和文件名 ---
+    function generateDownloadUrlPreserveNumbers(tableData) {
+        try {
+            // 1. 创建一个新的空工作表
+            const worksheet = XLSX.utils.aoa_to_sheet([]);
+
+            // 2. 手动填充数据并设置单元格格式
+            const range = { s: { c: 0, r: 0 }, e: { c: (tableData[0]?.length || 1) - 1, r: tableData.length - 1 } };
+            worksheet['!ref'] = XLSX.utils.encode_range(range);
+
+            for (let R = 0; R < tableData.length; ++R) {
+                for (let C = 0; C < tableData[R].length; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
+                    const cellValue = tableData[R][C];
+                    let cellObj;
+
+                    if (R === 0) {
+                        cellObj = { v: cellValue, t: 's' };
+                    } else if (C === 0) {
+                        if (typeof cellValue === 'number') {
+                            cellObj = { v: cellValue.toString(), t: 's' };
+                            cellObj.z = '@'; 
+                        } else if (typeof cellValue === 'string') {
+                            cellObj = { v: cellValue, t: 's' };
+                            cellObj.z = '@';
+                        } else {
+                            cellObj = { v: String(cellValue), t: 's' };
+                            cellObj.z = '@';
+                        }
+                    } else {
+                        cellObj = { v: cellValue, t: 's' };
+                    }
+                    worksheet[cellAddress] = cellObj;
+                }
+            }
+
+            // 3. 创建工作簿并添加工作表
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "合并汇总");
+
+            // 4. 写入数据并生成Blob
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            // 5. 获取当前日期并格式化为 YYYYMMDD
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+
+            // 6. 计算数据行数（不包括表头）
+            const dataCount = tableData.length - 1; // 减去表头
+
+            // 7. 生成包含日期和数量的文件名
+            const filename = `${dateString}_${dataCount}.xlsx`;
+
+            // 8. 创建 Object URL
+            const url = URL.createObjectURL(blob);
+
+            // 9. 返回 URL 和文件名
+            return { url, filename }; 
+        } catch (error) {
+            console.error('生成下载链接时出错:', error);
+            // 返回一个无效对象，便于调用者处理
+            return { url: '#', filename: 'error.xlsx' }; 
+        }
+    }
+    // --- 修改结束 ---
+
+    // 页面卸载时释放URL对象
+    window.addEventListener('beforeunload', () => {
+        const link = document.getElementById('downloadLink');
+        if (link && link.href && link.href.startsWith('blob:')) {
+            URL.revokeObjectURL(link.href);
+        }
+    });
+
+</script>
+
+</body>
+</html>
