@@ -3,30 +3,34 @@ on:
   push:
     branches:
       - main
-
 permissions:
   deployments: write
   pages: write
+  id-token: write
 
 jobs:
-  # 清理旧 GitHub Pages 部署
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: 删除所有旧部署
+      - name: 删除github-pages历史部署
         uses: strumwolf/delete-deployment-environment@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           environment: github-pages
           onlyRemoveDeployments: true
 
-  # 部署新页面（必须等清理完成才运行）
   deploy:
+    needs: cleanup # 必须等清理完成再部署
     runs-on: ubuntu-latest
-    needs: cleanup
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: 部署 GitHub Pages
+      - uses: actions/checkout@v4
+      - name: 配置Pages
+        uses: actions/configure-pages@v4
+      - name: 上传站点文件
+        uses: actions/upload-pages-artifact@v3
+      - name: 正式部署Pages
+        id: deploy
         uses: actions/deploy-pages@v4
