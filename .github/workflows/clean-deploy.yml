@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+
 permissions:
   deployments: write
   pages: write
@@ -20,7 +21,7 @@ jobs:
           onlyRemoveDeployments: true
 
   deploy:
-    needs: cleanup # 必须等清理完成再部署
+    needs: cleanup
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -31,6 +32,8 @@ jobs:
         uses: actions/configure-pages@v4
       - name: 上传站点文件
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."   # 👈 修复在这里
       - name: 正式部署Pages
         id: deploy
         uses: actions/deploy-pages@v4
