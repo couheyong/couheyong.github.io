@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230071e3'/%3E%3Cstop offset='1' stop-color='%238A8A8C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5' cy='5' r='5' fill='url(%23g)'/%3E%3C/svg%3E"/>
-    <title>评价Biu~ · 优雅复制</title>
+    <title>评价Biu~ · 稳固复制</title>
     <style>
         * {
             margin: 0;
@@ -22,7 +22,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 毛玻璃背景氛围 */
         body::before {
             content: "";
             position: fixed;
@@ -36,7 +35,6 @@
             z-index: -2;
         }
 
-        /* 跑马灯 */
         .marquee-wrap {
             position: fixed;
             top: 0;
@@ -65,7 +63,6 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* 卡片容器 */
         .page {
             max-width: 560px;
             margin: 0 auto;
@@ -109,7 +106,6 @@
             opacity: 0.8;
         }
 
-        /* 表单区 */
         .form-group {
             margin-bottom: 22px;
         }
@@ -162,7 +158,6 @@
         }
         .balance-btn:active { background: rgba(0,113,227,0.12); transform: scale(0.98); }
 
-        /* 进度条 */
         .progress-container {
             width: 100%;
             height: 8px;
@@ -186,14 +181,25 @@
             display: none;
         }
 
-        /* ========= 复制页面核心优化 · 宽敞呼吸感 ========= */
+        /* ========= 复制页面：固定高度，杜绝按钮移动 ========= */
+        /* 容器内部分为三个独立区块：评语卡片区(自适应但固定最小高度) + 剩余徽章 + 巨型按钮区(完全固定尺寸) */
+        .copy-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 评语卡片：固定最小高度，避免评语换行引起按钮位移，但内容自动撑开(不影响外部布局) */
         .review-card {
             background: #ffffff;
             border-radius: 32px;
             padding: 32px 24px;
-            margin-bottom: 28px;
+            min-height: 150px;      /* 保证至少2-3行空间，换行不会让后续组件下沉 */
             box-shadow: 0 6px 18px rgba(0,0,0,0.04), 0 1px 0 rgba(0,0,0,0.02);
             border: 0.5px solid rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
         }
         .review-text {
@@ -205,7 +211,7 @@
             word-break: break-word;
             letter-spacing: -0.2px;
         }
-        /* 装饰引用符号 */
+        /* 优雅装饰 */
         .review-text::before {
             content: "“";
             font-size: 28px;
@@ -232,7 +238,7 @@
             padding: 10px 20px;
             text-align: center;
             width: fit-content;
-            margin: 0 auto 28px auto;
+            margin: 0 auto;
             font-size: 16px;
             font-weight: 590;
             color: #0071e3;
@@ -244,25 +250,47 @@
             margin: 0 4px;
         }
 
-        /* 巨型复制按钮 — 舒朗质感 */
+        /* 巨型复制按钮 — 固定尺寸，永远不移动 */
+        .mega-copy-wrapper {
+            margin-top: 8px;
+            width: 100%;
+        }
         .mega-copy {
             background: linear-gradient(125deg, #0071e3, #0056b3);
             width: 100%;
             border: none;
-            border-radius: 48px;
-            padding: 32px 16px;
+            border-radius: 56px;
+            padding: 0;              /* 清除内边距保证固定高度 */
+            height: 82px;           /* 固定高度 82px (足够大且稳固) */
             font-size: 28px;
             font-weight: 700;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 14px;
             cursor: pointer;
-            transition: all 0.25s ease;
-            margin-bottom: 20px;
+            transition: all 0.2s ease;
             box-shadow: 0 18px 28px -12px rgba(0,113,227,0.4);
             letter-spacing: 2px;
+        }
+        /* 响应式稍微缩小，但保持固定高度 */
+        @media (max-width: 480px) {
+            .mega-copy {
+                height: 74px;
+                font-size: 24px;
+                gap: 10px;
+            }
+            .copy-icon {
+                font-size: 28px;
+            }
+            .review-card {
+                min-height: 140px;
+                padding: 24px 18px;
+            }
+            .review-text {
+                font-size: 18px;
+            }
         }
         .mega-copy:active {
             transform: scale(0.97);
@@ -276,7 +304,7 @@
             box-shadow: none;
         }
         .copy-icon {
-            font-size: 32px;
+            font-size: 34px;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
         }
 
@@ -285,14 +313,13 @@
             color: #424245;
             border: none;
             font-weight: 590;
-            margin-top: 8px;
+            margin-top: 16px;
         }
         .back-btn:active {
             background: rgba(0,0,0,0.1);
             transform: scale(0.98);
         }
 
-        /* toast 优雅提示 */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -312,7 +339,6 @@
             box-shadow: 0 6px 18px rgba(0,0,0,0.1);
         }
 
-        /* 弹窗 */
         .modal {
             position: fixed;
             top: 0;
@@ -358,16 +384,6 @@
             width: 100%;
             font-size: 16px;
         }
-
-        @media (max-width: 480px) {
-            body { padding: 16px; padding-top: 48px; }
-            .page { padding: 20px 18px; }
-            .review-card { padding: 24px 18px; }
-            .review-text { font-size: 18px; }
-            .mega-copy { padding: 26px 12px; font-size: 24px; }
-            .copy-icon { font-size: 28px; }
-            .count-badge { padding: 6px 16px; font-size: 14px; }
-        }
     </style>
 </head>
 <body>
@@ -391,26 +407,30 @@
     <div class="progress-container" id="progressContainer">
         <div class="progress-bar" id="progressBar"></div>
     </div>
-    <button class="generate-btn" id="generateBtn">✨ 生成评价 · 进入复制页</button>
+    <button class="generate-btn" id="generateBtn">✨ 生成评价 → 进入复制页</button>
     <button class="balance-btn" id="balanceBtn">💰 查询账户余额</button>
 </div>
 
-<!-- 复制页面 · 完全优化，减少紧凑感，优雅大间距 -->
+<!-- 复制页面：稳定布局，复制按钮固定高度，不会随评语换行上下移动 -->
 <div class="page" id="copyPage">
     <h1>📋 复制评价</h1>
-    <!-- 评价卡片 呼吸感 -->
-    <div class="review-card">
-        <div class="review-text" id="currentReviewText">✨ 暂无评价，先生成吧</div>
+    <div class="copy-layout">
+        <!-- 卡片区：评语换行但不会让外部布局变化，最小高度固定 -->
+        <div class="review-card">
+            <div class="review-text" id="currentReviewText">✨ 暂无评价，先生成吧</div>
+        </div>
+        <!-- 剩余徽章 -->
+        <div class="count-badge" id="countTip">
+            🎯 剩余评价 · <span id="countNumber">0</span> 条
+        </div>
+        <!-- 固定尺寸超大按钮 + 返回按钮 -->
+        <div class="mega-copy-wrapper">
+            <button class="mega-copy disabled" id="bigCopyBtn">
+                <span class="copy-icon">📋</span> 点击复制
+            </button>
+        </div>
+        <button class="back-btn" id="backBtn">← 返回重新生成</button>
     </div>
-    <!-- 剩余数量徽章 -->
-    <div class="count-badge" id="countTip">
-        🎯 剩余评价 · <span id="countNumber">0</span> 条
-    </div>
-    <!-- 巨型复制按钮 -->
-    <button class="mega-copy disabled" id="bigCopyBtn">
-        <span class="copy-icon">📋</span> 点击复制
-    </button>
-    <button class="back-btn" id="backBtn">← 返回重新生成</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -448,9 +468,9 @@
     const balanceText = document.getElementById('balanceText');
     const modalClose = document.getElementById('modalClose');
 
-    let reviewArray = [];          // 评价队列
+    let reviewArray = [];
 
-    // 多彩按钮变色 (轻趣味)
+    // 多彩按钮颜色池
     const btnColors = [
         'linear-gradient(125deg, #0071e3, #0056b3)',
         'linear-gradient(125deg, #E8472E, #C72A1A)',
@@ -460,7 +480,6 @@
     ];
     let currentColorIndex = 0;
 
-    // 提示函数
     function showToast(msg, duration = 1600) {
         toast.innerText = msg;
         toast.style.display = 'block';
@@ -480,7 +499,6 @@
         }
     }
 
-    // 改变复制按钮渐变色彩
     function changeBtnColor() {
         currentColorIndex = (currentColorIndex + 1) % btnColors.length;
         bigCopyBtn.style.background = btnColors[currentColorIndex];
@@ -492,7 +510,6 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 重置进度条
     function resetProgress() {
         progressText.style.display = 'none';
         progressContainer.style.display = 'none';
@@ -512,7 +529,7 @@
         return encodeURIComponent(value.trim()).replace(/%20/g, ' ');
     }
 
-    // 余额查询（保留原有逻辑）
+    // 余额查询
     async function checkBalance() {
         const urlParams = new URLSearchParams(window.location.search);
         const API_KEY_PART2 = urlParams.get('key') || '';
@@ -537,7 +554,7 @@
         }
     }
 
-    // 生成评价 (流式 + 进度)
+    // 生成评价（流式）
     async function generateReviews(keywords, targetCount) {
         const urlParams = new URLSearchParams(window.location.search);
         const API_KEY_PART2 = urlParams.get('key') || '';
@@ -608,7 +625,7 @@
                             const currentProgress = Math.min(reviews.length, targetCount);
                             updateProgress(currentProgress, targetCount);
                         }
-                    } catch (e) { /* 忽略解析错误 */ }
+                    } catch (e) { /* 忽略错误 */ }
                 }
             }
 
@@ -628,7 +645,7 @@
         }
     }
 
-    // 监听生成按钮
+    // 生成按钮事件
     generateBtn.addEventListener('click', async () => {
         generateBtn.classList.add('loading');
         generateBtn.innerText = '⏳ 生成中，请稍候...';
@@ -650,60 +667,58 @@
         showToast(`✅ 成功生成 ${reviews.length} 条优质评价`);
     });
 
-    // 复制核心逻辑（改进优雅复制）
+    // 复制逻辑（使用现代Clipboard，带fallback保证兼容）
     bigCopyBtn.addEventListener('click', () => {
         if (reviewArray.length === 0) {
             showToast('🏁 已经没有评价了，请返回重新生成', 1200);
             return;
         }
         const currentReview = reviewArray.shift().trim();
-        // 使用现代 Clipboard API + 降级处理
+        const copySuccess = () => {
+            changeBtnColor();
+            updateCopyUI();
+            showToast('📋 评价复制成功！', 1000);
+        };
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(currentReview).then(() => {
-                changeBtnColor();
-                updateCopyUI();
-                showToast('📋 评价复制成功！', 1000);
-            }).catch(() => {
-                // fallback
-                fallbackCopy(currentReview);
+            navigator.clipboard.writeText(currentReview).then(copySuccess).catch(() => {
+                fallbackCopy(currentReview, copySuccess);
             });
         } else {
-            fallbackCopy(currentReview);
+            fallbackCopy(currentReview, copySuccess);
         }
     });
 
-    function fallbackCopy(text) {
+    function fallbackCopy(text, onSuccess) {
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        changeBtnColor();
-        updateCopyUI();
-        showToast('📋 评价复制成功', 1000);
+        if (onSuccess) onSuccess();
+        else {
+            changeBtnColor();
+            updateCopyUI();
+            showToast('📋 复制成功', 1000);
+        }
     }
 
     backBtn.addEventListener('click', () => {
         switchPage(copyPage, generatePage);
-        // 不清空reviewArray，但可以保留无所谓
     });
 
     balanceBtn.addEventListener('click', checkBalance);
     modalClose.addEventListener('click', () => {
         balanceModal.style.display = 'none';
     });
-
-    // 点击模态框背景关闭
     window.addEventListener('click', (e) => {
         if (e.target === balanceModal) balanceModal.style.display = 'none';
     });
 
-    // 初始计数状态
     updateCopyUI();
 </script>
 
-<!-- 百度统计 & Cloudflare 保持原有 -->
+<!-- 统计代码保留 -->
 <script>
     var _hmt = _hmt || [];
     (function() {
