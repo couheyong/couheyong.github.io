@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+	<link rel="icon" type="image/svg+xml"
+		href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230071e3'/%3E%3Cstop offset='1' stop-color='%238A8A8C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5' cy='5' r='5' fill='url(%23g)'/%3E%3C/svg%3E" />
+    <title>电商订单号提取Biu~</title>
+    <script src="/xlsx.full.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f6fa;
+            color: #2d3436;
+            padding: 12px;
+            padding-bottom: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title .badge {
+            background: #667eea;
+            color: white;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 400;
+        }
+        .input-area textarea {
+            width: 100%;
+            height: 180px;
+            border: 2px solid #e8ecf1;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        .input-area textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        .input-area textarea::placeholder {
+            color: #b2bec3;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-group button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 80px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-group button:active {
+            transform: scale(0.97);
+        }
+        .btn-extract {
+            background: #667eea;
+            color: white;
+        }
+        .btn-extract:hover {
+            background: #5a67d8;
+        }
+        .btn-clear {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+        .btn-clear:hover {
+            background: #d0d7db;
+        }
+        .export-top-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #e8ecf1;
+        }
+        .export-top-bar .file-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3436;
+            white-space: nowrap;
+        }
+        .export-top-bar input {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px 12px;
+            border: 2px solid #e8ecf1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+            background: white;
+        }
+        .export-top-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        .export-top-bar .file-preview {
+            font-size: 13px;
+            color: #636e72;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid #e8ecf1;
+            white-space: nowrap;
+        }
+        .btn-export-top {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #00b894;
+            color: white;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-export-top:active {
+            transform: scale(0.95);
+        }
+        .btn-export-top:hover {
+            background: #00a381;
+        }
+        @media (max-width: 600px) {
+            .export-top-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .export-top-bar .file-label {
+                font-size: 13px;
+            }
+            .export-top-bar input {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            .export-top-bar .file-preview {
+                text-align: center;
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+            .btn-export-top {
+                padding: 12px 16px;
+                font-size: 15px;
+                text-align: center;
+            }
+        }
+        @media (max-width: 400px) {
+            .export-top-bar {
+                padding: 8px 10px;
+            }
+            .export-top-bar input {
+                font-size: 13px;
+                padding: 8px 10px;
+                min-width: 60px;
+            }
+            .btn-export-top {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+        }
+        .result-stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .result-stats .stat {
+            background: #f8f9fa;
+            padding: 4px 14px;
+            border-radius: 12px;
+        }
+        .result-stats .stat.total {
+            background: #667eea;
+            color: white;
+        }
+        .result-stats .stat.duplicate {
+            background: #fdcb6e;
+            color: #2d3436;
+        }
+        .result-stats .stat.unknown {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        .filter-bar .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #636e72;
+            margin-right: 4px;
+        }
+        .filter-bar button {
+            padding: 4px 14px;
+            border: 1px solid #dfe6e9;
+            border-radius: 14px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .filter-bar button:active {
+            transform: scale(0.95);
+        }
+        .filter-bar button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 360px;
+        }
+        .table-wrap th {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e8ecf1;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        .table-wrap td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f2f6;
+            vertical-align: middle;
+        }
+        .platform-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: white;
+            white-space: nowrap;
+        }
+        .platform-badge.unknown {
+            background: #b2bec3;
+            color: white;
+        }
+        .order-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            word-break: break-all;
+            font-size: 13px;
+        }
+        .order-id.duplicate {
+            color: #e17055;
+            position: relative;
+        }
+        .order-id.duplicate::after {
+            content: ' ⚠️重复';
+            font-size: 11px;
+            color: #e17055;
+            font-weight: 400;
+        }
+        .btn-edit {
+            background: #fdcb6e;
+            border: none;
+            border-radius: 6px;
+            padding: 3px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #2d3436;
+            font-weight: 500;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-edit:active {
+            transform: scale(0.95);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #b2bec3;
+        }
+        .empty-state .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .empty-state .text {
+            font-size: 14px;
+        }
+        .duplicate-list {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #fff8e7;
+            border-radius: 8px;
+            border: 1px solid #fdcb6e;
+        }
+        .duplicate-list .dup-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e17055;
+            margin-bottom: 6px;
+        }
+        .duplicate-list .dup-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .duplicate-list .dup-item {
+            background: white;
+            padding: 2px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid #fdcb6e;
+        }
+        .config-panel {
+            margin-top: 8px;
+        }
+        .config-panel .config-toggle {
+            background: none;
+            border: none;
+            color: #636e72;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .config-panel .config-toggle:active {
+            color: #2d3436;
+        }
+        .config-panel .config-body {
+            display: none;
+            margin-top: 12px;
+        }
+        .config-panel .config-body.open {
+            display: block;
+        }
+        .config-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 500px;
+        }
+        .config-table th {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e8ecf1;
+            font-size: 12px;
+        }
+        .config-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #f1f2f6;
+            vertical-align: middle;
+        }
+        .config-table input {
+            border: 1px solid #dfe6e9;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+            width: 100%;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        .config-table input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .config-table .prefix-input {
+            min-width: 120px;
+        }
+        .config-table .length-input {
+            width: 55px;
+        }
+        .config-table .color-input {
+            width: 36px;
+            height: 28px;
+            padding: 2px;
+            border: 1px solid #dfe6e9;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .config-table .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #e17055;
+            font-size: 18px;
+            padding: 0 4px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .config-table .delete-btn:active {
+            transform: scale(0.9);
+        }
+        .config-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .config-actions button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .config-actions button:active {
+            transform: scale(0.97);
+        }
+        .config-actions .btn-save-config {
+            background: #00b894;
+            color: white;
+        }
+        .config-actions .btn-add-platform {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+        .config-actions .btn-reset-config {
+            background: #e17055;
+            color: white;
+        }
+        .config-hint {
+            font-size: 12px;
+            color: #636e72;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        .config-hint code {
+            background: #f1f2f6;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-box .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-box .modal-title .badge-unknown {
+            font-size: 12px;
+            font-weight: 400;
+            background: #dfe6e9;
+            color: #636e72;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+        .modal-box .field-group {
+            margin-bottom: 14px;
+        }
+        .modal-box .field-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #636e72;
+            margin-bottom: 4px;
+        }
+        .modal-box .field-group .original-value {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #e17055;
+            background: #fff5f5;
+            padding: 8px 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            border: 1px solid #fce4e4;
+        }
+        .modal-box .field-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e8ecf1;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+            background: white;
+        }
+        .modal-box .field-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        .modal-box .field-group .hint {
+            font-size: 12px;
+            color: #636e72;
+            margin-top: 4px;
+        }
+        .modal-box .field-group .hint .highlight {
+            color: #667eea;
+            font-weight: 500;
+        }
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .modal-box .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .modal-box .modal-actions button:active {
+            transform: scale(0.97);
+        }
+        .modal-box .modal-actions .btn-confirm {
+            background: #667eea;
+            color: white;
+        }
+        .modal-box .modal-actions .btn-confirm:hover {
+            background: #5a67d8;
+        }
+        .modal-box .modal-actions .btn-cancel-modal {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+        .modal-box .modal-actions .btn-cancel-modal:hover {
+            background: #d0d7db;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #2d3436;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.35s ease;
+            z-index: 999;
+            max-width: 90%;
+            text-align: center;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            background: #00b894;
+        }
+        .toast.error {
+            background: #e17055;
+        }
+        .toast.info {
+            background: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 电商订单号提取器</h1>
+            <p>配置面板完全控制识别规则 · 修改即生效</p>
+        </div>
+
+        <div class="card input-area">
+            <div class="card-title">
+                📝 粘贴聊天记录
+                <span class="badge">自动识别</span>
+            </div>
+            <textarea id="inputText" placeholder="粘贴微信聊天记录到这里...&#10;&#10;示例：&#10;5124128655575011222 33 3312480507549008292 33&#10;抖音单号 6954512505287611840&#10;小红书 P20260717123456789&#10;拼多多 260715-627845393961040"></textarea>
+
+            <div class="btn-group">
+                <button class="btn-extract" onclick="extractOrders()">🔍 提取</button>
+                <button class="btn-clear" onclick="clearAll()">🗑️ 清空</button>
+            </div>
+        </div>
+
+        <div class="card" id="resultCard">
+            <div class="card-title">
+                📊 提取结果
+                <span class="badge" id="resultCount">0 条</span>
+            </div>
+
+            <div class="export-top-bar">
+                <span class="file-label">📄 文件名：</span>
+                <input type="text" id="fileNameInput" placeholder="输入表格名称" value="">
+                <span class="file-preview" id="fileNamePreview">7.17-未命名-0单</span>
+                <button class="btn-export-top" onclick="exportOrders()">📥 导出 Excel</button>
+            </div>
+
+            <div class="result-stats" id="resultStats">
+                <span class="stat total">总计: 0 条</span>
+                <span class="stat unknown" id="unknownStat" style="display:none;">❓未识别: 0 条</span>
+                <span class="stat duplicate" id="dupStat" style="display:none;">⚠️ 重复: 0 条</span>
+            </div>
+
+            <div class="filter-bar">
+                <span class="filter-label">筛选：</span>
+                <button class="active" data-platform="all" onclick="filterPlatform('all')">全部</button>
+                <div id="filterButtons" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:36px;">#</th>
+                            <th style="width:80px;">平台</th>
+                            <th>订单号</th>
+                            <th style="width:70px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div class="icon">🔍</div>
+                                <div class="text">粘贴聊天记录后点击"提取"</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="duplicate-list" id="duplicateList" style="display:none;">
+                <div class="dup-title">⚠️ 检测到重复的订单号（已自动去重，仅保留一条）</div>
+                <div class="dup-items" id="dupItems"></div>
+            </div>
+        </div>
+
+        <div class="card config-panel">
+            <button class="config-toggle" onclick="toggleConfig()">
+                ⚙️ 平台规则配置 <span id="configArrow">▶</span>
+            </button>
+            <div class="config-body" id="configBody">
+                <div class="config-table-wrap">
+                    <table class="config-table">
+                        <thead>
+                            <tr>
+                                <th style="width:24px;">#</th>
+                                <th style="width:70px;">平台</th>
+                                <th>前缀（逗号分隔）</th>
+                                <th style="width:60px;">最小</th>
+                                <th style="width:60px;">最大</th>
+                                <th style="width:44px;">颜色</th>
+                                <th style="width:32px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="configTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <button class="btn-add-platform" onclick="addPlatform()" style="padding:6px 16px;border:1px dashed #dfe6e9;border-radius:6px;background:transparent;cursor:pointer;font-size:13px;color:#636e72;">➕ 添加平台</button>
+                </div>
+
+                <div class="config-actions">
+                    <button class="btn-save-config" onclick="applyConfig()">✅ 应用配置</button>
+                    <button class="btn-reset-config" onclick="resetConfig()">🔄 恢复默认</button>
+                </div>
+
+                <div class="config-hint">
+                    💡 前缀用逗号分隔。修改后点击"应用配置"生效，<strong>识别规则完全由面板控制</strong>。
+                    <br>📌 当前规则：抖音(69/19位) | 淘宝(51,33/19位) | 小红书(P/19位) | 京东(3/12位) | 拼多多(260715-/22位)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                ✏️ 修正订单号
+                <span class="badge-unknown">未识别</span>
+            </div>
+            <div class="field-group">
+                <label>原始值</label>
+                <div class="original-value" id="editOriginalValue">-</div>
+            </div>
+            <div class="field-group">
+                <label>修正为</label>
+                <input type="text" id="editInput" placeholder="输入正确的订单号" autocomplete="off">
+                <div class="hint">💡 系统将 <span class="highlight">自动识别</span> 该单号所属平台（基于面板配置）</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel-modal" onclick="closeEditModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmEdit()">✅ 确认修正</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // =================================================================
+        // 1. 默认配置
+        // =================================================================
+        const DEFAULT_CONFIG = {
+            douyin: {
+                name: '抖音',
+                prefix: ['69'],
+                minLength: 19,
+                maxLength: 19,
+                color: '#1E1E1E'
+            },
+            taobao: {
+                name: '淘宝',
+                prefix: ['51', '33'],
+                minLength: 19,
+                maxLength: 19,
+                color: '#FF6A00'
+            },
+            xiaohongshu: {
+                name: '小红书',
+                prefix: ['P'],
+                minLength: 19,
+                maxLength: 19,
+                color: '#FE2C55'
+            },
+            jingdong: {
+                name: '京东',
+                prefix: ['3'],
+                minLength: 12,
+                maxLength: 12,
+                color: '#36ccf2'
+            },
+            pinduoduo: {
+                name: '拼多多',
+                prefix: ['260715-'],
+                minLength: 22,
+                maxLength: 22,
+                color: '#E02E24'
+            }
+        };
+
+        // =================================================================
+        // 2. 全局状态
+        // =================================================================
+        let currentConfig = {};
+        let currentOrders = [];
+        let unknownOrders = [];
+        let duplicateIds = [];
+        let currentFilter = 'all';
+        let editingIndex = -1;
+
+        // =================================================================
+        // 3. 配置管理
+        // =================================================================
+
+        function loadConfig() {
+            const saved = localStorage.getItem('orderPlatformConfig');
+            if (saved) {
+                try {
+                    currentConfig = JSON.parse(saved);
+                } catch (e) {
+                    currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                }
+            } else {
+                currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+            }
+        }
+
+        function saveConfig() {
+            localStorage.setItem('orderPlatformConfig', JSON.stringify(currentConfig));
+        }
+
+        function renderConfigTable() {
+            const tbody = document.getElementById('configTableBody');
+            const keys = Object.keys(currentConfig);
+
+            if (keys.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="7" style="text-align:center;color:#b2bec3;padding:20px;">暂无平台，请添加</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = keys.map((key, index) => {
+                const p = currentConfig[key];
+                return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>
+                                <input type="text" value="${p.name}" data-key="${key}" data-field="name" style="width:60px;">
+                            </td>
+                            <td>
+                                <input type="text" value="${p.prefix.join(', ')}" data-key="${key}" data-field="prefix" class="prefix-input">
+                            </td>
+                            <td>
+                                <input type="number" value="${p.minLength}" data-key="${key}" data-field="minLength" class="length-input" min="8" max="30">
+                            </td>
+                            <td>
+                                <input type="number" value="${p.maxLength}" data-key="${key}" data-field="maxLength" class="length-input" min="8" max="30">
+                            </td>
+                            <td>
+                                <input type="color" value="${p.color || '#667eea'}" data-key="${key}" data-field="color" class="color-input">
+                            </td>
+                            <td>
+                                <button class="delete-btn" onclick="removePlatform('${key}')">✕</button>
+                            </td>
+                        </tr>
+                    `;
+            }).join('');
+
+            document.querySelectorAll('#configTableBody input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const key = this.dataset.key;
+                    const field = this.dataset.field;
+                    if (!currentConfig[key]) return;
+
+                    if (field === 'prefix') {
+                        currentConfig[key][field] = this.value.split(',').map(s => s.trim()).filter(Boolean);
+                    } else if (field === 'minLength' || field === 'maxLength') {
+                        currentConfig[key][field] = parseInt(this.value) || 10;
+                    } else {
+                        currentConfig[key][field] = this.value;
+                    }
+                });
+            });
+        }
+
+        function renderFilterButtons() {
+            const container = document.getElementById('filterButtons');
+            const keys = Object.keys(currentConfig);
+            container.innerHTML = keys.map(key => `
+                    <button data-platform="${key}" onclick="filterPlatform('${key}')">
+                        ${currentConfig[key].name}
+                    </button>
+                `).join('');
+        }
+
+        function toggleConfig() {
+            const body = document.getElementById('configBody');
+            const arrow = document.getElementById('configArrow');
+            body.classList.toggle('open');
+            arrow.textContent = body.classList.contains('open') ? '▼' : '▶';
+        }
+
+        function applyConfig() {
+            document.querySelectorAll('#configTableBody input').forEach(input => {
+                const event = new Event('change');
+                input.dispatchEvent(event);
+            });
+            saveConfig();
+            renderFilterButtons();
+            showToast('✅ 配置已应用，识别规则已更新', 'success');
+            if (document.getElementById('inputText').value.trim()) {
+                extractOrders();
+            }
+        }
+
+        function addPlatform() {
+            const key = 'platform_' + Date.now();
+            currentConfig[key] = {
+                name: '新平台',
+                prefix: ['XX'],
+                minLength: 12,
+                maxLength: 15,
+                color: '#667eea'
+            };
+            renderConfigTable();
+            saveConfig();
+            renderFilterButtons();
+            showToast('✅ 已添加新平台，请配置规则后点击"应用配置"', 'success');
+        }
+
+        function removePlatform(key) {
+            if (Object.keys(currentConfig).length <= 1) {
+                showToast('⚠️ 至少保留一个平台', 'error');
+                return;
+            }
+            if (confirm(`确定删除 "${currentConfig[key].name}" 吗？`)) {
+                delete currentConfig[key];
+                renderConfigTable();
+                saveConfig();
+                renderFilterButtons();
+                showToast('✅ 已删除平台', 'success');
+                if (document.getElementById('inputText').value.trim()) {
+                    extractOrders();
+                }
+            }
+        }
+
+        function resetConfig() {
+            if (confirm('恢复默认配置？')) {
+                currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                saveConfig();
+                renderConfigTable();
+                renderFilterButtons();
+                showToast('✅ 已恢复默认配置', 'success');
+                if (document.getElementById('inputText').value.trim()) {
+                    extractOrders();
+                }
+            }
+        }
+
+        // =================================================================
+        // 4. 核心识别逻辑
+        // =================================================================
+
+        function identifyPlatform(orderId) {
+            if (!orderId || typeof orderId !== 'string') return null;
+
+            // 遍历面板配置
+            for (const [key, config] of Object.entries(currentConfig)) {
+                if (!config || !config.prefix) continue;
+                for (const prefix of config.prefix) {
+                    if (!prefix) continue;
+
+                    const digitsMin = config.minLength - prefix.length;
+                    const digitsMax = config.maxLength - prefix.length;
+                    if (digitsMin < 0 || digitsMax < 0) continue;
+
+                    // 横杠前缀特殊处理（拼多多格式）
+                    if (prefix.includes('-')) {
+                        if (orderId.startsWith(prefix)) {
+                            const remaining = orderId.substring(prefix.length);
+                            if (/^\d+$/.test(remaining) && remaining.length >= digitsMin && remaining.length <= digitsMax) {
+                                return key;
+                            }
+                        }
+                        continue;
+                    }
+
+                    try {
+                        const pattern = new RegExp(`^${prefix}\\d{${digitsMin},${digitsMax}}$`);
+                        if (pattern.test(orderId)) {
+                            return key;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // =================================================================
+        // 5. 提取逻辑
+        // =================================================================
+
+        function extractOrders() {
+            const text = document.getElementById('inputText').value;
+
+            if (!text.trim()) {
+                currentOrders = [];
+                unknownOrders = [];
+                duplicateIds = [];
+                renderResults();
+                updateStats();
+                document.getElementById('resultCount').textContent = '0 条';
+                updateFileNamePreview();
+                document.getElementById('duplicateList').style.display = 'none';
+                showToast('⚠️ 请先粘贴聊天记录', 'error');
+                return;
+            }
+
+            try {
+                const normalResults = [];
+                const unknownResults = [];
+                const allIds = [];
+                const idCount = {};
+
+                const segments = text.split(/[\s\n\r\t,，、；;]+/).filter(s => s.trim());
+
+                for (const seg of segments) {
+                    const trimmed = seg.trim();
+                    if (!trimmed) continue;
+
+                    const platform = identifyPlatform(trimmed);
+                    if (platform) {
+                        allIds.push(trimmed);
+                        idCount[trimmed] = (idCount[trimmed] || 0) + 1;
+                        normalResults.push({
+                            orderId: trimmed,
+                            platformKey: platform,
+                            platformName: getPlatformDisplay(platform),
+                            color: getPlatformColor(platform),
+                            isUnknown: false
+                        });
+                    } else {
+                        const found = extractFromSegment(trimmed);
+                        if (found.length > 0) {
+                            for (const f of found) {
+                                if (!allIds.includes(f)) {
+                                    allIds.push(f);
+                                    idCount[f] = (idCount[f] || 0) + 1;
+                                    const p = identifyPlatform(f);
+                                    if (p) {
+                                        normalResults.push({
+                                            orderId: f,
+                                            platformKey: p,
+                                            platformName: getPlatformDisplay(p),
+                                            color: getPlatformColor(p),
+                                            isUnknown: false
+                                        });
+                                    }
+                                }
+                            }
+                        } else {
+                            if (/[A-Za-z0-9]{10,}/.test(trimmed)) {
+                                unknownResults.push({ id: trimmed, raw: trimmed });
+                            }
+                        }
+                    }
+                }
+
+                duplicateIds = Object.keys(idCount).filter(id => idCount[id] > 1);
+
+                const uniqueNormals = [];
+                const seen = new Set();
+                for (const item of normalResults) {
+                    if (!seen.has(item.orderId)) {
+                        seen.add(item.orderId);
+                        uniqueNormals.push(item);
+                    }
+                }
+
+                const uniqueUnknowns = [];
+                const seenUnknown = new Set();
+                for (const item of unknownResults) {
+                    if (!seenUnknown.has(item.id)) {
+                        seenUnknown.add(item.id);
+                        uniqueUnknowns.push(item);
+                    }
+                }
+
+                currentOrders = uniqueNormals;
+                unknownOrders = uniqueUnknowns;
+
+                showDuplicates();
+                updateFileNamePreview();
+                renderResults();
+                updateStats();
+
+                const total = uniqueNormals.length + uniqueUnknowns.length;
+                if (total === 0) {
+                    showToast('⚠️ 未提取到任何订单号', 'error');
+                } else {
+                    const msg =
+                        `✅ 提取完成，共 ${total} 条（正常 ${uniqueNormals.length} 条，未识别 ${uniqueUnknowns.length} 条）`;
+                    showToast(msg, uniqueUnknowns.length > 0 ? 'info' : 'success');
+                }
+
+            } catch (err) {
+                console.error('提取出错:', err);
+                showToast('❌ 提取过程出错，请检查控制台', 'error');
+            }
+        }
+
+        function extractFromSegment(segment) {
+            const results = [];
+
+            for (const [key, config] of Object.entries(currentConfig)) {
+                if (!config || !config.prefix) continue;
+                for (const prefix of config.prefix) {
+                    if (!prefix) continue;
+
+                    const digitsMin = config.minLength - prefix.length;
+                    const digitsMax = config.maxLength - prefix.length;
+                    if (digitsMin < 0 || digitsMax < 0) continue;
+
+                    try {
+                        const pattern = new RegExp(`${prefix}\\d{${digitsMin},${digitsMax}}`);
+                        const match = segment.match(pattern);
+                        if (match) {
+                            const fullMatch = match[0];
+                            if (identifyPlatform(fullMatch)) {
+                                results.push(fullMatch);
+                            }
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+            }
+
+            return [...new Set(results)];
+        }
+
+        function getPlatformDisplay(platformKey) {
+            if (!platformKey) return null;
+            const p = currentConfig[platformKey];
+            return p ? p.name : platformKey;
+        }
+
+        function getPlatformColor(platformKey) {
+            if (!platformKey) return '#b2bec3';
+            const p = currentConfig[platformKey];
+            return p ? p.color : '#b2bec3';
+        }
+
+        // =================================================================
+        // 6. 渲染
+        // =================================================================
+
+        function renderResults() {
+            const tbody = document.getElementById('resultBody');
+
+            const allItems = [];
+            for (const item of currentOrders) {
+                allItems.push({
+                    orderId: item.orderId,
+                    platformKey: item.platformKey,
+                    platformName: item.platformName,
+                    color: item.color,
+                    isUnknown: false,
+                    unknownIndex: -1
+                });
+            }
+            for (let i = 0; i < unknownOrders.length; i++) {
+                const u = unknownOrders[i];
+                allItems.push({
+                    orderId: u.id,
+                    platformKey: null,
+                    platformName: '❓未识别',
+                    color: '#b2bec3',
+                    isUnknown: true,
+                    unknownIndex: i
+                });
+            }
+
+            let filtered = allItems;
+            if (currentFilter !== 'all') {
+                filtered = allItems.filter(item => {
+                    if (item.isUnknown) return currentFilter === 'unknown';
+                    return item.platformKey === currentFilter;
+                });
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div class="icon">📭</div>
+                                <div class="text">当前筛选条件下没有数据</div>
+                            </td>
+                        </tr>
+                    `;
+                document.getElementById('resultCount').textContent = '0 条';
+                return;
+            }
+
+            const dupSet = new Set(duplicateIds);
+
+            tbody.innerHTML = filtered.map((item, index) => {
+                const isDup = !item.isUnknown && dupSet.has(item.orderId);
+                const isUnknown = item.isUnknown;
+
+                return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>
+                                <span class="platform-badge ${isUnknown ? 'unknown' : ''}" 
+                                      style="${!isUnknown ? `background:${item.color}` : ''}">
+                                    ${item.platformName}
+                                </span>
+                            </td>
+                            <td class="order-id ${isDup ? 'duplicate' : ''}">${item.orderId}</td>
+                            <td>
+                                ${isUnknown ? `<button class="btn-edit" onclick="openEditModal(${item.unknownIndex})">✏️ 修正</button>` : ''}
+                            </td>
+                        </tr>
+                    `;
+            }).join('');
+
+            document.getElementById('resultCount').textContent = `${filtered.length} 条`;
+        }
+
+        function updateStats() {
+            const unknownStat = document.getElementById('unknownStat');
+            const dupStat = document.getElementById('dupStat');
+            const container = document.getElementById('resultStats');
+
+            if (!container) return;
+
+            const allItems = [];
+            for (const item of currentOrders) {
+                allItems.push({
+                    orderId: item.orderId,
+                    platformKey: item.platformKey,
+                    platformName: item.platformName,
+                    isUnknown: false
+                });
+            }
+            for (const u of unknownOrders) {
+                allItems.push({
+                    orderId: u.id,
+                    platformKey: null,
+                    platformName: '❓未识别',
+                    isUnknown: true
+                });
+            }
+
+            let filtered = allItems;
+            if (currentFilter !== 'all') {
+                filtered = allItems.filter(item => {
+                    if (item.isUnknown) return currentFilter === 'unknown';
+                    return item.platformKey === currentFilter;
+                });
+            }
+
+            const total = filtered.length;
+
+            let html = `<span class="stat total">总计: ${total} 条</span>`;
+
+            if (unknownOrders.length > 0) {
+                html += `<span class="stat unknown">❓未识别: ${unknownOrders.length} 条</span>`;
+                if (unknownStat) unknownStat.style.display = 'inline';
+            } else {
+                if (unknownStat) unknownStat.style.display = 'none';
+            }
+
+            if (duplicateIds.length > 0) {
+                html += `<span class="stat duplicate">⚠️ 重复: ${duplicateIds.length} 条</span>`;
+                if (dupStat) dupStat.style.display = 'inline';
+            } else {
+                if (dupStat) dupStat.style.display = 'none';
+            }
+
+            const stats = {};
+            for (const item of currentOrders) {
+                const name = item.platformName || '未知';
+                stats[name] = (stats[name] || 0) + 1;
+            }
+            for (const [name, count] of Object.entries(stats)) {
+                html += `<span class="stat">${name}: ${count}</span>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function showDuplicates() {
+            const container = document.getElementById('duplicateList');
+            const items = document.getElementById('dupItems');
+
+            if (!container) return;
+
+            if (duplicateIds.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            if (items) {
+                items.innerHTML = duplicateIds.map(id => `<span class="dup-item">${id}</span>`).join('');
+            }
+        }
+
+        function filterPlatform(platform) {
+            currentFilter = platform;
+            document.querySelectorAll('.filter-bar button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const target = document.querySelector(`.filter-bar button[data-platform="${platform}"]`);
+            if (target) target.classList.add('active');
+            renderResults();
+            updateStats();
+        }
+
+        // =================================================================
+        // 7. 文件名预览
+        // =================================================================
+
+        function updateFileNamePreview() {
+            const name = document.getElementById('fileNameInput').value || '未命名';
+            const count = currentOrders.length;
+            const date = new Date();
+            const dateStr = `${date.getMonth()+1}.${String(date.getDate()).padStart(2,'0')}`;
+            const preview = document.getElementById('fileNamePreview');
+            if (preview) {
+                preview.textContent = `${dateStr}-${name}-${count}单`;
+            }
+        }
+
+        document.getElementById('fileNameInput').addEventListener('input', updateFileNamePreview);
+
+        // =================================================================
+        // 8. 编辑弹窗
+        // =================================================================
+
+        function openEditModal(index) {
+            editingIndex = index;
+            const item = unknownOrders[index];
+            if (!item) return;
+
+            const originalEl = document.getElementById('editOriginalValue');
+            const inputEl = document.getElementById('editInput');
+            const modal = document.getElementById('editModal');
+
+            if (originalEl) originalEl.textContent = item.id;
+            if (inputEl) inputEl.value = item.id;
+            if (modal) modal.classList.add('active');
+
+            setTimeout(() => {
+                if (inputEl) {
+                    inputEl.focus();
+                    inputEl.select();
+                }
+            }, 100);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            if (modal) modal.classList.remove('active');
+            editingIndex = -1;
+        }
+
+        function confirmEdit() {
+            const inputEl = document.getElementById('editInput');
+            if (!inputEl) return;
+
+            const newValue = inputEl.value.trim();
+            if (!newValue) {
+                showToast('⚠️ 请输入修正后的订单号', 'error');
+                return;
+            }
+
+            const platform = identifyPlatform(newValue);
+
+            if (platform) {
+                const item = unknownOrders[editingIndex];
+                if (!item) {
+                    showToast('⚠️ 数据异常，请重新提取', 'error');
+                    closeEditModal();
+                    return;
+                }
+
+                unknownOrders.splice(editingIndex, 1);
+
+                currentOrders.push({
+                    orderId: newValue,
+                    platformKey: platform,
+                    platformName: getPlatformDisplay(platform),
+                    color: getPlatformColor(platform),
+                    isUnknown: false
+                });
+
+                // 重新排序：按出现顺序（这里简单按添加顺序）
+                renderResults();
+                updateStats();
+                closeEditModal();
+                showToast(`✅ 修正成功: ${newValue} → ${getPlatformDisplay(platform)}`, 'success');
+
+            } else {
+                showToast(`❌ 仍无法识别 "${newValue}"，请检查单号是否正确`, 'error');
+            }
+        }
+
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditModal();
+        });
+
+        document.getElementById('editInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') confirmEdit();
+            if (e.key === 'Escape') closeEditModal();
+        });
+
+        // =================================================================
+        // 9. 导出
+        // =================================================================
+
+        function getExportData() {
+            let data = currentOrders;
+            if (currentFilter !== 'all') {
+                data = data.filter(o => o.platformKey === currentFilter);
+            }
+            return data;
+        }
+
+        function getFileName() {
+            const name = document.getElementById('fileNameInput').value || '未命名';
+            const count = currentOrders.length;
+            const date = new Date();
+            const dateStr = `${date.getMonth()+1}.${String(date.getDate()).padStart(2,'0')}`;
+            return `${dateStr}-${name}-${count}单`;
+        }
+
+        function exportOrders() {
+            const data = getExportData();
+            if (data.length === 0) {
+                showToast('⚠️ 没有数据可导出', 'error');
+                return;
+            }
+
+            const aoa = data.map(item => [item.orderId]);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            let maxLen = 12;
+            data.forEach(item => {
+                if (item.orderId.length > maxLen) maxLen = item.orderId.length;
+            });
+            ws['!cols'] = [{ wch: Math.max(15, maxLen * 1.2) }];
+
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[addr]) {
+                        ws[addr].t = 's';
+                        ws[addr].z = '@';
+                    }
+                }
+            }
+
+            const borderStyle = {
+                top: { style: 'thin', color: { rgb: "CCCCCC" } },
+                bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+                left: { style: 'thin', color: { rgb: "CCCCCC" } },
+                right: { style: 'thin', color: { rgb: "CCCCCC" } }
+            };
+
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[addr]) {
+                        if (!ws[addr].s) ws[addr].s = {};
+                        ws[addr].s.border = borderStyle;
+                        ws[addr].s.font = { name: 'Courier New', sz: 11 };
+                        ws[addr].s.alignment = { horizontal: 'left', vertical: 'center' };
+                    }
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, '订单号');
+
+            const fileName = getFileName();
+            XLSX.writeFile(wb, `${fileName}.xlsx`);
+
+            showToast(`✅ 已导出 ${data.length} 条订单号`, 'success');
+        }
+
+        // =================================================================
+        // 10. 辅助
+        // =================================================================
+
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            currentOrders = [];
+            unknownOrders = [];
+            duplicateIds = [];
+            document.getElementById('duplicateList').style.display = 'none';
+            renderResults();
+            updateStats();
+            document.getElementById('resultCount').textContent = '0 条';
+            updateFileNamePreview();
+            showToast('已清空', 'success');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + (type || '');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // =================================================================
+        // 11. 初始化
+        // =================================================================
+
+        function init() {
+            loadConfig();
+            renderConfigTable();
+            renderFilterButtons();
+            updateFileNamePreview();
+
+            const allBtn = document.querySelector('.filter-bar button[data-platform="all"]');
+            if (allBtn) allBtn.classList.add('active');
+
+            console.log('📦 订单号提取器已初始化');
+            console.log('当前配置:', currentConfig);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+	<script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?757929a3feb95c93fd7fb29b23896390";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script>
+</body>
+</html>
