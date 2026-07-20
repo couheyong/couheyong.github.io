@@ -16,8 +16,9 @@
         .header h1{font-size:20px;font-weight:600}
         .header p{opacity:.9;font-size:13px;margin-top:4px}
         .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-        .card-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .card-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
         .card-title .badge{background:#667eea;color:#fff;font-size:11px;padding:2px 10px;border-radius:12px;font-weight:400}
+        .card-title .hint{font-size:12px;color:#636e72;font-weight:400;margin-left:auto}
         .input-area textarea{width:100%;height:180px;border:2px solid #e8ecf1;border-radius:8px;padding:12px;font-size:15px;font-family:inherit;resize:vertical;transition:border-color .2s;-webkit-appearance:none}
         .input-area textarea:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.15)}
         .input-area textarea::placeholder{color:#b2bec3}
@@ -49,7 +50,7 @@
         .filter-bar button:active{transform:scale(.95)}
         .filter-bar button.active{background:#667eea;color:#fff;border-color:#667eea}
         .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-        .table-wrap table{width:100%;border-collapse:collapse;font-size:14px;min-width:360px}
+        .table-wrap table{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
         .table-wrap th{background:#f8f9fa;padding:10px 12px;text-align:left;font-weight:600;border-bottom:2px solid #e8ecf1;font-size:13px;position:sticky;top:0;z-index:5}
         .table-wrap td{padding:10px 12px;border-bottom:1px solid #f1f2f6;vertical-align:middle}
         .platform-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap}
@@ -57,8 +58,11 @@
         .order-id{font-family:'Courier New',monospace;font-weight:500;word-break:break-all;font-size:13px}
         .order-id.duplicate{color:#e17055;position:relative}
         .order-id.duplicate::after{content:' ⚠️重复';font-size:11px;color:#e17055;font-weight:400}
-        .btn-edit{background:#fdcb6e;border:none;border-radius:6px;padding:3px 12px;font-size:12px;cursor:pointer;color:#2d3436;font-weight:500;-webkit-tap-highlight-color:transparent}
+        .btn-edit{background:#fdcb6e;border:none;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;color:#2d3436;font-weight:500;-webkit-tap-highlight-color:transparent}
         .btn-edit:active{transform:scale(.95)}
+        .btn-locate{background:#74b9ff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;color:#fff;font-weight:500;-webkit-tap-highlight-color:transparent}
+        .btn-locate:active{transform:scale(.95)}
+        .btn-locate:hover{background:#5a9fd4}
         .empty-state{text-align:center;padding:40px 20px;color:#b2bec3}
         .empty-state .icon{font-size:40px;margin-bottom:8px}
         .empty-state .text{font-size:14px}
@@ -121,7 +125,7 @@
     <div class="container">
         <div class="header">
             <h1>📦 电商订单号提取器</h1>
-            <p>配置面板完全控制识别规则 · 支持连续拼接单号</p>
+            <p>配置面板控制识别规则 · 🔍定位原文 · ✏️手动修正</p>
         </div>
 
         <div class="card input-area">
@@ -140,11 +144,12 @@
             <div class="card-title">
                 📊 提取结果
                 <span class="badge" id="resultCount">0 条</span>
+                <span class="hint">💡 未识别项可点击"🔍定位"到原文查看</span>
             </div>
             <div class="export-top-bar">
                 <span class="file-label">📄 文件名：</span>
                 <input type="text" id="fileNameInput" placeholder="输入表格名称" value="">
-                <span class="file-preview" id="fileNamePreview">7.17-未命名-0单</span>
+                <span class="file-preview" id="fileNamePreview">7.20号-未命名-0单</span>
                 <button class="btn-export-top" onclick="exportOrders()">📥 导出 Excel</button>
             </div>
             <div class="result-stats" id="resultStats">
@@ -159,12 +164,15 @@
             </div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th style="width:36px;">#</th><th style="width:80px;">平台</th><th>订单号</th><th style="width:70px;">操作</th></tr></thead>
+                    <thead>
+                        <tr><th style="width:36px;">#</th><th style="width:80px;">平台</th><th>订单号</th><th style="width:150px;">操作</th></tr>
+                    </thead>
                     <tbody id="resultBody">
                         <tr><td colspan="4" class="empty-state"><div class="icon">🔍</div><div class="text">粘贴聊天记录后点击"提取"</div></td></tr>
                     </tbody>
                 </table>
             </div>
+
             <div class="duplicate-list" id="duplicateList" style="display:none;">
                 <div class="dup-title">⚠️ 检测到重复的订单号（已自动去重，仅保留一条）</div>
                 <div class="dup-items" id="dupItems"></div>
@@ -178,7 +186,9 @@
             <div class="config-body" id="configBody">
                 <div class="config-table-wrap">
                     <table class="config-table">
-                        <thead><tr><th style="width:24px;">#</th><th style="width:70px;">平台</th><th>前缀（逗号分隔）</th><th style="width:60px;">最小</th><th style="width:60px;">最大</th><th style="width:44px;">颜色</th><th style="width:32px;">操作</th></tr></thead>
+                        <thead>
+                            <tr><th style="width:24px;">#</th><th style="width:70px;">平台</th><th>前缀（逗号分隔）</th><th style="width:60px;">最小</th><th style="width:60px;">最大</th><th style="width:44px;">颜色</th><th style="width:32px;">操作</th></tr>
+                        </thead>
                         <tbody id="configTableBody"></tbody>
                     </table>
                 </div>
@@ -192,12 +202,23 @@
         </div>
     </div>
 
+    <!-- ===== 编辑弹窗 ===== -->
     <div class="modal-overlay" id="editModal">
         <div class="modal-box">
             <div class="modal-title">✏️ 修正订单号 <span class="badge-unknown">未识别</span></div>
-            <div class="field-group"><label>原始值</label><div class="original-value" id="editOriginalValue">-</div></div>
-            <div class="field-group"><label>修正为</label><input type="text" id="editInput" placeholder="输入正确的订单号" autocomplete="off"><div class="hint">💡 系统将 <span class="highlight">自动识别</span> 该单号所属平台</div></div>
-            <div class="modal-actions"><button class="btn-cancel-modal" onclick="closeEditModal()">取消</button><button class="btn-confirm" onclick="confirmEdit()">✅ 确认修正</button></div>
+            <div class="field-group">
+                <label>原始值</label>
+                <div class="original-value" id="editOriginalValue">-</div>
+            </div>
+            <div class="field-group">
+                <label>修正为</label>
+                <input type="text" id="editInput" placeholder="输入正确的订单号" autocomplete="off">
+                <div class="hint">💡 系统将 <span class="highlight">自动识别</span> 该单号所属平台</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel-modal" onclick="closeEditModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmEdit()">✅ 确认修正</button>
+            </div>
         </div>
     </div>
 
@@ -211,14 +232,18 @@
             douyin: { name: '抖音', prefix: ['69'], minLength: 19, maxLength: 19, color: '#1E1E1E' },
             taobao: { name: '淘宝', prefix: ['51', '33'], minLength: 19, maxLength: 19, color: '#FF6A00' },
             xiaohongshu: { name: '小红书', prefix: ['P'], minLength: 19, maxLength: 19, color: '#FE2C55' },
-            pinduoduo: { name: '拼多多', prefix: ['260715-'], minLength: 22, maxLength: 22, color: '#E02E24' },
-            jingdong: { name: '京东', prefix: ['3'], minLength: 12, maxLength: 12, color: '#E4393C' }
+            pinduoduo: { name: '拼多多', prefix: ['260715-'], minLength: 22, maxLength: 22, color: '#E02E24' }
         };
 
         // ================================================================
         // 2. 全局状态
         // ================================================================
-        let currentConfig = {}, currentOrders = [], unknownOrders = [], duplicateIds = [], currentFilter = 'all', editingIndex = -1;
+        let currentConfig = {},
+            currentOrders = [],
+            unknownOrders = [],
+            duplicateIds = [],
+            currentFilter = 'all',
+            editingIndex = -1;
 
         // ================================================================
         // 3. 配置管理
@@ -232,7 +257,8 @@
         function renderConfigTable() {
             const tbody = document.getElementById('configTableBody');
             const keys = Object.keys(currentConfig);
-            if (keys.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#b2bec3;padding:20px;">暂无平台，请添加</td></tr>'; return; }
+            if (keys.length === 0) { tbody.innerHTML =
+                    '<tr><td colspan="7" style="text-align:center;color:#b2bec3;padding:20px;">暂无平台，请添加</td></tr>'; return; }
             tbody.innerHTML = keys.map((key, i) => {
                 const p = currentConfig[key];
                 return `<tr><td>${i+1}</td><td><input type="text" value="${p.name}" data-key="${key}" data-field="name" style="width:60px;"></td>
@@ -244,10 +270,13 @@
             }).join('');
             document.querySelectorAll('#configTableBody input').forEach(inp => {
                 inp.addEventListener('change', function() {
-                    const key = this.dataset.key, field = this.dataset.field;
+                    const key = this.dataset.key,
+                        field = this.dataset.field;
                     if (!currentConfig[key]) return;
-                    if (field === 'prefix') currentConfig[key][field] = this.value.split(',').map(s=>s.trim()).filter(Boolean);
-                    else if (field === 'minLength' || field === 'maxLength') currentConfig[key][field] = parseInt(this.value) || 10;
+                    if (field === 'prefix') currentConfig[key][field] = this.value.split(',').map(s => s.trim()).filter(
+                        Boolean);
+                    else if (field === 'minLength' || field === 'maxLength') currentConfig[key][field] = parseInt(this
+                        .value) || 10;
                     else currentConfig[key][field] = this.value;
                 });
             });
@@ -310,6 +339,7 @@
         // ================================================================
         function identifyPlatform(orderId) {
             if (!orderId || typeof orderId !== 'string') return null;
+            if (orderId.length < 8) return null;
             for (const [key, config] of Object.entries(currentConfig)) {
                 if (!config || !config.prefix) continue;
                 for (const prefix of config.prefix) {
@@ -320,66 +350,125 @@
                     if (prefix.includes('-')) {
                         if (orderId.startsWith(prefix)) {
                             const remaining = orderId.substring(prefix.length);
-                            if (/^\d+$/.test(remaining) && remaining.length >= digitsMin && remaining.length <= digitsMax) return key;
+                            if (/^\d+$/.test(remaining) && remaining.length >= digitsMin && remaining.length <= digitsMax)
+                                return key;
                         }
                         continue;
                     }
                     try {
                         if (new RegExp(`^${prefix}\\d{${digitsMin},${digitsMax}}$`).test(orderId)) return key;
-                    } catch(e) {}
+                    } catch (e) {}
                 }
             }
             return null;
         }
 
         // ================================================================
-        // 5. 核心提取 - 直接从文本中连续提取
+        // 5. 提取逻辑
         // ================================================================
         function extractOrders() {
-            const text = document.getElementById('inputText').value;
-            if (!text.trim()) {
-                currentOrders = []; unknownOrders = []; duplicateIds = [];
-                renderAll(); updateStats(); updateFileNamePreview();
+            const rawText = document.getElementById('inputText').value;
+            if (!rawText.trim()) {
+                currentOrders = [];
+                unknownOrders = [];
+                duplicateIds = [];
+                renderAll();
+                updateStats();
+                updateFileNamePreview();
                 document.getElementById('duplicateList').style.display = 'none';
                 showToast('⚠️ 请先粘贴聊天记录', 'error');
                 return;
             }
 
             try {
-                // 清理文本：只保留数字、字母、横杠，去除所有分隔符
-                const cleanText = text.replace(/[\s\n\r\t,，、；;]+/g, '');
+                const digitRegex = /[0-9]+/g;
+                let match;
+                const segments = [];
+                while ((match = digitRegex.exec(rawText)) !== null) {
+                    const seg = match[0];
+                    if (seg.length >= 10) {
+                        segments.push({ text: seg, start: match.index, end: match.index + seg.length });
+                    }
+                }
 
-                // 从清理后的文本中连续提取
-                const results = extractAllFromText(cleanText);
-
-                // 分离正常和未知
-                const normal = [], unknown = [];
+                const normalResults = [];
+                const unknownResults = [];
                 const idCount = {};
-                for (const r of results) {
-                    if (r.isUnknown) {
-                        unknown.push({ id: r.orderId, raw: r.orderId });
-                    } else {
-                        idCount[r.orderId] = (idCount[r.orderId] || 0) + 1;
-                        normal.push({
-                            orderId: r.orderId,
-                            platformKey: r.platformKey,
-                            platformName: getPlatformDisplay(r.platformKey),
-                            color: getPlatformColor(r.platformKey),
-                            isUnknown: false
+
+                for (const segObj of segments) {
+                    const seg = segObj.text;
+                    let pos = 0;
+                    while (pos + 19 <= seg.length) {
+                        const candidate = seg.substring(pos, pos + 19);
+                        const p = identifyPlatform(candidate);
+                        if (p) {
+                            normalResults.push({
+                                orderId: candidate,
+                                platformKey: p,
+                                platformName: getPlatformDisplay(p),
+                                color: getPlatformColor(p),
+                                isUnknown: false
+                            });
+                            idCount[candidate] = (idCount[candidate] || 0) + 1;
+                            pos += 19;
+                        } else {
+                            let found = false;
+                            const prefixes = ['69', '51', '33'];
+                            for (const pfx of prefixes) {
+                                const idx = seg.indexOf(pfx, pos);
+                                if (idx !== -1 && idx + 19 <= seg.length) {
+                                    const cand2 = seg.substring(idx, idx + 19);
+                                    const p2 = identifyPlatform(cand2);
+                                    if (p2) {
+                                        normalResults.push({
+                                            orderId: cand2,
+                                            platformKey: p2,
+                                            platformName: getPlatformDisplay(p2),
+                                            color: getPlatformColor(p2),
+                                            isUnknown: false
+                                        });
+                                        idCount[cand2] = (idCount[cand2] || 0) + 1;
+                                        pos = idx + 19;
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (found) continue;
+                            pos++;
+                        }
+                    }
+                    let remaining = seg.substring(pos);
+                    if (remaining.length >= 10) {
+                        const remainStart = segObj.start + pos;
+                        const remainEnd = remainStart + remaining.length;
+                        unknownResults.push({
+                            id: remaining,
+                            start: remainStart,
+                            end: remainEnd,
+                            raw: remaining
                         });
                     }
                 }
 
                 duplicateIds = Object.keys(idCount).filter(id => idCount[id] > 1);
 
-                // 去重
-                const uniqueNormal = [], seen = new Set();
-                for (const item of normal) {
-                    if (!seen.has(item.orderId)) { seen.add(item.orderId); uniqueNormal.push(item); }
+                const uniqueNormal = [],
+                    seenNormal = new Set();
+                for (const item of normalResults) {
+                    if (!seenNormal.has(item.orderId)) {
+                        seenNormal.add(item.orderId);
+                        uniqueNormal.push(item);
+                    }
                 }
-                const uniqueUnknown = [], seenU = new Set();
-                for (const item of unknown) {
-                    if (!seenU.has(item.id)) { seenU.add(item.id); uniqueUnknown.push(item); }
+
+                const uniqueUnknown = [],
+                    seenUnknown = new Set();
+                for (const item of unknownResults) {
+                    if (!seenUnknown.has(item.id)) {
+                        seenUnknown.add(item.id);
+                        uniqueUnknown.push(item);
+                    }
                 }
 
                 currentOrders = uniqueNormal;
@@ -395,159 +484,10 @@
                 else showToast(`✅ 提取完成，共 ${total} 条（正常 ${uniqueNormal.length} 条，未识别 ${uniqueUnknown.length} 条）`,
                     uniqueUnknown.length > 0 ? 'info' : 'success');
 
-            } catch(err) {
+            } catch (err) {
                 console.error('提取出错:', err);
-                showToast('❌ 提取出错', 'error');
+                showToast('❌ 提取出错: ' + err.message, 'error');
             }
-        }
-
-        /**
-         * 从纯文本中连续提取所有订单号
-         * 核心逻辑：每次从当前位置开始，尝试所有规则，匹配到就跳过
-         */
-        function extractAllFromText(text) {
-            const results = [];
-            let pos = 0;
-
-            // 收集所有规则，按单号总长度从长到短排序
-            const rules = [];
-            for (const [key, config] of Object.entries(currentConfig)) {
-                if (!config || !config.prefix) continue;
-                for (const prefix of config.prefix) {
-                    if (!prefix) continue;
-                    const digitsMin = config.minLength - prefix.length;
-                    const digitsMax = config.maxLength - prefix.length;
-                    if (digitsMin < 0 || digitsMax < 0) continue;
-                    rules.push({
-                        key: key,
-                        name: config.name,
-                        color: config.color,
-                        prefix: prefix,
-                        digitsMin: digitsMin,
-                        digitsMax: digitsMax,
-                        totalMin: config.minLength,
-                        totalMax: config.maxLength,
-                        hasDash: prefix.includes('-')
-                    });
-                }
-            }
-            // 按总长度从大到小排序，优先匹配更长的单号
-            rules.sort((a, b) => b.totalMax - a.totalMax);
-
-            // 从位置0开始，逐个位置尝试
-            while (pos < text.length) {
-                // 检查是否还有足够的字符
-                if (pos + 8 > text.length) break;
-
-                let matched = false;
-
-                for (const rule of rules) {
-                    // 检查当前位置是否匹配前缀
-                    if (!text.startsWith(rule.prefix, pos)) continue;
-
-                    // 检查前缀后面是否都是数字
-                    let digitLen = 0;
-                    let idx = pos + rule.prefix.length;
-                    while (idx < text.length && /^\d$/.test(text[idx])) {
-                        digitLen++;
-                        idx++;
-                    }
-
-                    // 检查数字长度是否符合要求
-                    if (digitLen >= rule.digitsMin && digitLen <= rule.digitsMax) {
-                        // 匹配成功！
-                        const matchedText = text.substring(pos, pos + rule.prefix.length + digitLen);
-                        results.push({
-                            orderId: matchedText,
-                            platformKey: rule.key,
-                            platformName: rule.name,
-                            color: rule.color,
-                            isUnknown: false
-                        });
-                        pos += matchedText.length;
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if (!matched) {
-                    // 没匹配到任何规则，检查当前位置是否是数字
-                    if (/^\d$/.test(text[pos])) {
-                        // 收集连续数字
-                        let numLen = 0;
-                        while (pos + numLen < text.length && /^\d$/.test(text[pos + numLen])) numLen++;
-                        if (numLen >= 10) {
-                            // 可能是未知单号，尝试按长度切分（抖音19位、淘宝19位等）
-                            // 先尝试按19位切分（抖音、淘宝）
-                            if (numLen >= 38) {
-                                // 至少有两个19位单号
-                                const first19 = text.substring(pos, pos + 19);
-                                const second19 = text.substring(pos + 19, pos + 38);
-                                // 检查两个是否都是抖音或淘宝
-                                const p1 = identifyPlatform(first19);
-                                const p2 = identifyPlatform(second19);
-                                if (p1 && p2) {
-                                    results.push({ orderId: first19, platformKey: p1, platformName: getPlatformDisplay(p1), color: getPlatformColor(p1), isUnknown: false });
-                                    results.push({ orderId: second19, platformKey: p2, platformName: getPlatformDisplay(p2), color: getPlatformColor(p2), isUnknown: false });
-                                    pos += 38;
-                                    continue;
-                                }
-                            }
-                            // 尝试按12位切分（京东）
-                            if (numLen >= 24) {
-                                const first12 = text.substring(pos, pos + 12);
-                                const second12 = text.substring(pos + 12, pos + 24);
-                                const p1 = identifyPlatform(first12);
-                                const p2 = identifyPlatform(second12);
-                                if (p1 && p2 && p1 === 'jingdong' && p2 === 'jingdong') {
-                                    results.push({ orderId: first12, platformKey: p1, platformName: getPlatformDisplay(p1), color: getPlatformColor(p1), isUnknown: false });
-                                    results.push({ orderId: second12, platformKey: p2, platformName: getPlatformDisplay(p2), color: getPlatformColor(p2), isUnknown: false });
-                                    pos += 24;
-                                    continue;
-                                }
-                            }
-                            // 尝试按19位切分（单个）
-                            if (numLen >= 19) {
-                                const first19 = text.substring(pos, pos + 19);
-                                const p = identifyPlatform(first19);
-                                if (p) {
-                                    results.push({ orderId: first19, platformKey: p, platformName: getPlatformDisplay(p), color: getPlatformColor(p), isUnknown: false });
-                                    pos += 19;
-                                    continue;
-                                }
-                            }
-                            // 尝试按12位切分（单个京东）
-                            if (numLen >= 12) {
-                                const first12 = text.substring(pos, pos + 12);
-                                const p = identifyPlatform(first12);
-                                if (p && p === 'jingdong') {
-                                    results.push({ orderId: first12, platformKey: p, platformName: getPlatformDisplay(p), color: getPlatformColor(p), isUnknown: false });
-                                    pos += 12;
-                                    continue;
-                                }
-                            }
-                            // 如果都不匹配，作为未知单号
-                            const unknownId = text.substring(pos, pos + numLen);
-                            results.push({
-                                orderId: unknownId,
-                                platformKey: null,
-                                platformName: '❓未识别',
-                                color: '#b2bec3',
-                                isUnknown: true
-                            });
-                            pos += numLen;
-                        } else {
-                            // 长度不够10位，跳过
-                            pos++;
-                        }
-                    } else {
-                        // 非数字，跳过
-                        pos++;
-                    }
-                }
-            }
-
-            return results;
         }
 
         function getPlatformDisplay(key) { return key && currentConfig[key] ? currentConfig[key].name : null; }
@@ -560,19 +500,33 @@
             const tbody = document.getElementById('resultBody');
             const allItems = [];
             for (const item of currentOrders) {
-                allItems.push({ orderId: item.orderId, platformKey: item.platformKey, platformName: item.platformName,
-                    color: item.color, isUnknown: false, unknownIndex: -1 });
+                allItems.push({
+                    orderId: item.orderId,
+                    platformKey: item.platformKey,
+                    platformName: item.platformName,
+                    color: item.color,
+                    isUnknown: false,
+                    unknownIndex: -1
+                });
             }
             for (let i = 0; i < unknownOrders.length; i++) {
                 const u = unknownOrders[i];
-                allItems.push({ orderId: u.id, platformKey: null, platformName: '❓未识别', color: '#b2bec3', isUnknown: true,
-                    unknownIndex: i });
+                allItems.push({
+                    orderId: u.id,
+                    platformKey: null,
+                    platformName: '❓未识别',
+                    color: '#b2bec3',
+                    isUnknown: true,
+                    unknownIndex: i,
+                    start: u.start,
+                    end: u.end
+                });
             }
 
             let filtered = allItems;
             if (currentFilter !== 'all') {
                 filtered = allItems.filter(item => item.isUnknown ? currentFilter === 'unknown' : item.platformKey ===
-                currentFilter);
+                    currentFilter);
             }
 
             if (filtered.length === 0) {
@@ -589,7 +543,13 @@
                     <td>${idx+1}</td>
                     <td><span class="platform-badge ${item.isUnknown?'unknown':''}" style="${!item.isUnknown?`background:${item.color}`:''}">${item.platformName}</span></td>
                     <td class="order-id ${isDup?'duplicate':''}">${item.orderId}</td>
-                    <td>${item.isUnknown?`<button class="btn-edit" onclick="openEditModal(${item.unknownIndex})">✏️ 修正</button>`:''}</td>
+                    <td>
+                        ${item.isUnknown ? 
+                            `<button class="btn-locate" onclick="locateUnknown(${item.unknownIndex})">🔍定位</button>
+                             <button class="btn-edit" onclick="openEditModal(${item.unknownIndex})">✏️修正</button>` : 
+                            ''
+                        }
+                    </td>
                 </tr>`;
             }).join('');
             document.getElementById('resultCount').textContent = `${filtered.length} 条`;
@@ -648,7 +608,29 @@
         }
 
         // ================================================================
-        // 7. 文件名预览
+        // 7. 定位功能（仅定位，不弹窗）
+        // ================================================================
+        function locateUnknown(index) {
+            const item = unknownOrders[index];
+            if (!item) return;
+
+            const textarea = document.getElementById('inputText');
+            if (!textarea) return;
+
+            textarea.focus();
+            // 计算滚动位置，定位到该片段所在行
+            const lines = textarea.value.substring(0, item.start).split('\n').length;
+            const lineHeight = 20;
+            textarea.scrollTop = Math.max(0, (lines - 3) * lineHeight);
+
+            // 高亮选中该片段
+            textarea.setSelectionRange(item.start, item.end);
+
+            showToast(`📍 已定位到原文 (第${lines}行)`, 'info');
+        }
+
+        // ================================================================
+        // 8. 文件名预览
         // ================================================================
         function updateFileNamePreview() {
             const name = document.getElementById('fileNameInput').value || '未命名';
@@ -656,12 +638,12 @@
             const date = new Date();
             const dateStr = `${date.getMonth()+1}.${String(date.getDate()).padStart(2,'0')}`;
             const preview = document.getElementById('fileNamePreview');
-            if (preview) preview.textContent = `${dateStr}-${name}-${count}单`;
+            if (preview) preview.textContent = `${dateStr}号-${name}-${count}单`;
         }
         document.getElementById('fileNameInput').addEventListener('input', updateFileNamePreview);
 
         // ================================================================
-        // 8. 编辑弹窗
+        // 9. 编辑弹窗
         // ================================================================
         function openEditModal(index) {
             editingIndex = index;
@@ -714,7 +696,7 @@
         });
 
         // ================================================================
-        // 9. 导出
+        // 10. 导出
         // ================================================================
         function getExportData() {
             let data = currentOrders;
@@ -772,7 +754,7 @@
         }
 
         // ================================================================
-        // 10. 辅助
+        // 11. 辅助
         // ================================================================
         function clearAll() {
             document.getElementById('inputText').value = '';
@@ -796,7 +778,7 @@
         }
 
         // ================================================================
-        // 11. 初始化
+        // 12. 初始化
         // ================================================================
         function init() {
             loadConfig();
@@ -804,7 +786,7 @@
             renderFilterButtons();
             updateFileNamePreview();
             document.querySelector('.filter-bar button[data-platform="all"]')?.classList.add('active');
-            console.log('📦 订单号提取器已初始化');
+            console.log('📦 订单号提取器已初始化 | 🔍定位原文 · ✏️手动修正');
         }
         document.addEventListener('DOMContentLoaded', init);
     </script>
