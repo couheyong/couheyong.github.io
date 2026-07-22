@@ -11,38 +11,42 @@
             box-sizing: border-box;
         }
 
-        body {
-            background: #f0ede8;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             font-family: 'Segoe UI', 'PingFang SC', system-ui, -apple-system, sans-serif;
-            padding: 16px;
+            background: #f0ede8;
         }
 
+        /* 全屏容器 — 无边框 */
         .phone-frame {
-            max-width: 400px;
             width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             background: #ffffff;
-            border-radius: 48px 48px 40px 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.03);
-            padding: 24px 20px 28px;
-            min-height: 720px;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(0,0,0,0.03);
+            padding: 0;
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
             position: relative;
+            overflow: hidden;
         }
 
+        /* ===== 顶部状态栏 ===== */
         .status-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 14px;
-            border-bottom: 1px solid #f0ece8;
-            margin-bottom: 10px;
+            padding: 14px 20px 12px 20px;
             flex-shrink: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #f0ece8;
+            z-index: 5;
         }
         .status-bar .title {
             font-size: 20px;
@@ -59,18 +63,22 @@
             font-weight: 300;
             letter-spacing: 1px;
         }
-        .status-bar .time {
+        .status-bar .date-display {
             font-size: 14px;
             color: #b0a69c;
             font-weight: 300;
+            letter-spacing: 0.5px;
         }
 
+        /* ===== 内容区域 — 弹性，中间留白 ===== */
         .content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 4px 0 6px;
+            padding: 0 20px 10px 20px;
             position: relative;
+            overflow: hidden;
+            min-height: 0;
         }
 
         /* ===== 提示框 ===== */
@@ -78,9 +86,9 @@
             background: #f8f6f4;
             border-radius: 20px;
             padding: 18px 20px 16px;
-            margin-bottom: 12px;
+            margin: 10px 0 8px 0;
             border: 1px solid #ede8e2;
-            min-height: 90px;
+            min-height: 88px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -134,16 +142,17 @@
         .hint-box.state-processing { border-color: #d5c8bc; background: #faf8f6; }
         .hint-box.state-done { border-color: #d0d8d0; background: #f6f8f5; }
 
-        /* ===== 指纹区域 ===== */
+        /* ===== 指纹区域 — 固定在底部 ===== */
         .fingerprint-area {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            padding: 6px 0 10px;
-            min-height: 160px;
+            flex-shrink: 0;
+            padding: 8px 0 6px 0;
+            min-height: 150px;
             position: relative;
+            margin-top: auto;
         }
 
         .fingerprint-ring {
@@ -192,7 +201,7 @@
         /* ===== 悬浮进度条 ===== */
         .progress-wrapper {
             position: absolute;
-            bottom: -6px;
+            bottom: -4px;
             left: 50%;
             transform: translateX(-50%);
             width: 75%;
@@ -240,6 +249,7 @@
             padding: 4px 0 8px;
             animation: fadeIn 0.4s ease;
             flex: 1;
+            overflow-y: auto;
         }
         .result-page.show {
             display: flex;
@@ -325,16 +335,8 @@
             margin-top: 4px;
             line-height: 1.6;
         }
-        .result-footnote strong {
-            color: #6a5f52;
-            font-weight: 400;
-        }
         .result-footnote .improve {
             color: #5a8a6a;
-            font-weight: 400;
-        }
-        .result-footnote .decline {
-            color: #b07a6a;
             font-weight: 400;
         }
 
@@ -342,6 +344,7 @@
             display: flex;
             gap: 10px;
             margin-top: 16px;
+            padding-bottom: 4px;
         }
         .action-row .btn {
             flex: 1;
@@ -367,28 +370,11 @@
             color: #5a4f46;
         }
 
-        .footnote {
-            margin-top: 18px;
-            font-size: 11px;
-            color: #ccc4bc;
-            text-align: center;
-            letter-spacing: 0.5px;
-            border-top: 1px solid #f0ece8;
-            padding-top: 14px;
-            flex-shrink: 0;
-        }
-        .footnote i {
-            font-style: normal;
-            background: #faf8f6;
-            padding: 2px 16px;
-            border-radius: 40px;
-            color: #ccc4bc;
-        }
-
         .initial-content {
             display: flex;
             flex-direction: column;
             flex: 1;
+            min-height: 0;
         }
         .initial-content.hidden {
             display: none;
@@ -496,8 +482,28 @@
             background: #c8b8aa;
         }
 
+        /* 底部脚标 — 很淡 */
+        .footnote {
+            margin-top: 4px;
+            font-size: 10px;
+            color: #ddd8d2;
+            text-align: center;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            padding: 2px 0 6px 0;
+        }
+        .footnote i {
+            font-style: normal;
+            background: #faf8f6;
+            padding: 2px 14px;
+            border-radius: 40px;
+            color: #ddd8d2;
+        }
+
         @media (max-width: 420px) {
-            .phone-frame { padding: 16px 14px 20px; min-height: 620px; }
+            .status-bar { padding: 12px 16px 10px 16px; }
+            .status-bar .title { font-size: 17px; }
+            .content { padding: 0 14px 8px 14px; }
             .fingerprint-ring { width: 130px; height: 130px; }
             .fingerprint-btn { width: 112px; height: 112px; }
             .fingerprint-btn svg { width: 50px; height: 50px; }
@@ -540,9 +546,10 @@
 
 <!-- ===== 主界面 ===== -->
 <div class="phone-frame" id="phoneFrame">
+    <!-- 顶部状态栏 -->
     <div class="status-bar">
         <div class="title">🧬 量子波 <small>· 全息</small></div>
-        <div class="time" id="clockDisplay">--:--</div>
+        <div class="date-display" id="dateDisplay"></div>
     </div>
 
     <div class="content">
@@ -559,7 +566,7 @@
                 </div>
             </div>
 
-            <!-- 指纹区域 -->
+            <!-- 指纹区域 — 固定在底部 -->
             <div class="fingerprint-area">
                 <div class="fingerprint-ring">
                     <div class="fingerprint-btn" id="fingerBtn" role="button" tabindex="0">
@@ -568,15 +575,15 @@
                         </svg>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 悬浮进度条 -->
-        <div class="progress-wrapper" id="progressWrapper">
-            <div class="progress-track">
-                <div class="progress-fill" id="progressFill"></div>
+                <!-- 悬浮进度条 -->
+                <div class="progress-wrapper" id="progressWrapper">
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-label" id="progressLabel">0%</div>
+                </div>
             </div>
-            <div class="progress-label" id="progressLabel">0%</div>
         </div>
 
         <!-- 结果页面 -->
@@ -591,10 +598,10 @@
                 <button class="btn btn-primary" id="resetBtn">⟳ 重新检测</button>
             </div>
         </div>
-    </div>
 
-    <div class="footnote">
-        <i>⚠️ 基于指纹识别 · YS演绎</i>
+        <div class="footnote">
+            <i>⚠️ 基于指纹识别 · 演示模拟</i>
+        </div>
     </div>
 </div>
 
@@ -616,7 +623,7 @@
         const resultUser = document.getElementById('resultUser');
         const resultCount = document.getElementById('resultCount');
         const resetBtn = document.getElementById('resetBtn');
-        const clockDisplay = document.getElementById('clockDisplay');
+        const dateDisplay = document.getElementById('dateDisplay');
         const phoneFrame = document.getElementById('phoneFrame');
 
         // 弹窗
@@ -640,13 +647,17 @@
         let progress = 0;
         const REQUIRED_HOLD = 5000;
 
-        // 时钟
-        function updateClock() {
+        // ===== 日期显示 =====
+        function updateDate() {
             const now = new Date();
-            clockDisplay.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const wd = weekdays[now.getDay()];
+            dateDisplay.textContent = `${year}.${month}.${day} 周${wd}`;
         }
-        updateClock();
-        setInterval(updateClock, 30000);
+        updateDate();
 
         // 提示框状态管理
         function setHintState(state, title, sub, statusHtml) {
@@ -669,7 +680,7 @@
             );
         }
 
-        // ===== 基于年龄+性别+检测次数的唬人数据 =====
+        // ===== 生成报告 =====
         function generateReport(user, count, prevResult) {
             const { name, gender, age } = user;
             const isMale = gender === '男';
@@ -692,7 +703,6 @@
             const mod = ageModifiers[ageGroup] || ageModifiers['中年'];
             const genderPrefix = isMale ? '肾' : '肝';
 
-            // 根据检测次数调整数值 — 越往后越好
             const progressFactor = Math.min((count - 1) / 4, 1.0);
             const improveOffset = Math.floor(progressFactor * 30);
 
@@ -723,7 +733,6 @@
                 return { label, value: val, numValue: adjustedNum };
             });
 
-            // 加入"具体"数据
             const heartRate = 55 + Math.floor(Math.random() * 28) - Math.floor(progressFactor * 10);
             const bpSys = 105 + Math.floor(Math.random() * 28) - Math.floor(progressFactor * 8);
             const bpDia = 65 + Math.floor(Math.random() * 18) - Math.floor(progressFactor * 5);
@@ -745,7 +754,6 @@
             }
             items.sort(() => Math.random() - 0.5);
 
-            // ===== 生成改善对比信息 =====
             let improvementMsg = '';
             const currAvg = items.reduce((sum, it) => sum + (it.numValue || 50), 0) / items.length;
 
@@ -771,7 +779,6 @@
                 improvementMsg = `📊 第 ${count} 次检测`;
             }
 
-            // ===== 唬人建议 =====
             const supplementMap = {
                 '青年': {
                     male: ['辅酶Q10', '锌+硒', '维生素B族', '精氨酸', '玛卡提取物', 'D-核糖', '牛磺酸'],
@@ -843,9 +850,7 @@
             previousResult = { avgScore: report.avgScore };
         }
 
-        // ===== 重置并显示弹窗 =====
         function resetAndShowModal() {
-            // 清理所有状态
             if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
             if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
             isPressing = false;
@@ -860,22 +865,18 @@
             previousResult = null;
             isUserConfirmed = false;
 
-            // 禁用指纹
             fingerBtn.style.pointerEvents = 'none';
             fingerBtn.style.opacity = '0.6';
 
-            // 弹窗回填已有信息
             modalName.value = userInfo.name || '';
             modalGender.value = userInfo.gender || '男';
             modalAge.value = userInfo.age || 30;
             modalCount.value = userInfo.count || 1;
 
-            // 显示弹窗
             modalOverlay.classList.add('show');
             resetHint();
         }
 
-        // ===== 弹窗确认 =====
         function confirmUser() {
             const name = modalName.value.trim() || '未命名';
             const gender = modalGender.value;
@@ -955,7 +956,6 @@
                 return;
             }
 
-            // 成功
             isPressing = false;
             isProcessing = true;
             const countDisplay = userInfo.count || 1;
@@ -995,7 +995,6 @@
         fingerBtn.addEventListener('touchend', handlePressEnd, { passive: false });
         fingerBtn.addEventListener('touchcancel', e => { if (isPressing) handlePressEnd(e); });
 
-        // 重新检测按钮 - 显示弹窗
         resetBtn.addEventListener('click', resetAndShowModal);
 
         fingerBtn.addEventListener('keydown', e => {
